@@ -68,15 +68,15 @@ test('vec2 addition', () => {
 ## 3. Additional Development Information
 
 ### WebGL2 Context
-The main entry point is `src/main.js`, where the WebGL2 context is initialized:
-```javascript
-const canvas = document.getElementById('canvas');
-const gl = canvas.getContext('webgl2');
-```
-Ensure all shaders and rendering logic are compatible with the WebGL2 specification.
+The application uses a simple routing system in `src/main.js` that updates the `#app` container based on URL parameters. The layout consists of a scrollable left sidebar for navigation and a main content area on the right.
+
+To update the content, modify the `renderPage` function in `src/main.js`. Ensure that any new page content includes a `<canvas id="canvas"></canvas>` if WebGL rendering is required for that page.
 
 ### Code Style and Conventions
 - **Matrix/Vector Math:** Use `gl-matrix` functions for all transformations. Avoid manual matrix manipulations when possible.
 - **Performance:** For hot loops in rendering, prefer pre-allocating vectors (e.g., `vec2.create()`) outside the loop to minimize garbage collection.
 - **Asset Imports:** Use Vite's ESM import syntax for assets (images, CSS, shaders).
 - **ES Modules:** The project is configured as `"type": "module"`. Use `import/export` syntax consistently.
+- **Layout:** The layout is managed via CSS Flexbox. The sidebar is scrollable (`overflow-y: auto`), and the main `#app` area is fixed (`overflow: hidden`).
+- **Theme:** The application uses a dark theme by default, configured in `src/style.css`.
+- **Navigation:** Navigation is handled by standard `<a>` tags with query parameters (e.g., `?page=name`). The `renderPage` function listens for `popstate` and initializes on load to update the view.
