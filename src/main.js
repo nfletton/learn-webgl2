@@ -1,47 +1,86 @@
 import './style.css'
-import {vec2} from "gl-matrix";
 import {setCanvasColor} from "./setCanvasColor";
-
-function initPage() {
-  const app = document.querySelector('#app');
-  app.innerHTML = `<canvas id="canvas"></canvas>`;
-}
-
-function initWebGL() {
-  const canvas = document.getElementById('canvas');
-  if (!canvas) return;
-
-  const gl = canvas.getContext('webgl2');
-  if (!gl) {
-    console.error("WebGL2 not supported");
-    return;
-  }
-  console.log(`WebGL2 initialized`);
-  return gl
-}
+import {squarePlane} from "./squarePlane";
 
 const functionRegistry = {
-  setCanvasColor: setCanvasColor,
-  example2: example2,
+    setCanvasColor,
+    squarePlane,
 };
 
-function example2(gl) {
-  gl.clearColor(0.3, 0.1, 0.1, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-}
+(function init() {
+        function onResize(entries) {
+            for (const entry of entries) {
+                let width;
+                let height;
+                let dpr = window.devicePixelRatio;
+                if (entry.devicePixelContentBoxSize) {
+                    // NOTE: Only this path gives the correct answer
+                    // The other paths are imperfect fallbacks
+                    // for browsers that don't provide anyway to do this
+                    width = entry.devicePixelContentBoxSize[0].inlineSize;
+                    height = entry.devicePixelContentBoxSize[0].blockSize;
+                    dpr = 1; // it's already in width and height
+                } else if (entry.contentBoxSize) {
+                    if (entry.contentBoxSize[0]) {
+                        width = entry.contentBoxSize[0].inlineSize;
+                        height = entry.contentBoxSize[0].blockSize;
+                    } else {
+                        width = entry.contentBoxSize.inlineSize;
+                        height = entry.contentBoxSize.blockSize;
+                    }
+                } else {
+                    width = entry.contentRect.width;
+                    height = entry.contentRect.height;
+                }
+                canvas.width = Math.round(width * dpr);
+                canvas.height = Math.round(height * dpr);
+                if (typeof drawScene === 'function') {
+                    requestAnimationFrame(drawScene);
+                }
+            }
+        }
 
-function executeFunc(gl) {
-  const params = new URLSearchParams(window.location.search);
-  const funcName = params.get('func') || 'home';
+        function initResizeHandling() {
+            const canvas = document.getElementById('canvas')
+            const resizeObserver = new ResizeObserver(onResize);
+            try {
+                // only call us of the number of device pixels changed
+                resizeObserver.observe(canvas, {box: 'device-pixel-content-box'});
+            } catch (ex) {
+                // device-pixel-content-box is not supported so fallback to this
+                resizeObserver.observe(canvas, {box: 'content-box'});
+            }
+            return canvas
+        }
 
-  if (typeof functionRegistry[funcName] === 'function') {
-    console.log(`Function ${funcName} executed`)
-    functionRegistry[funcName](gl);
-  } else {
-    console.warn(`Function ${funcName} not found.`);
-  }
-}
+        function executeFunc(gl) {
+            const params = new URLSearchParams(window.location.search);
+            const funcName = params.get('func') || 'setCanvasColor';
 
-initPage();
-const gl = initWebGL();
-if (gl) executeFunc(gl)
+            const renderFn = functionRegistry[funcName];
+            if (typeof renderFn === 'function') {
+                console.log(`Function ${funcName} executed`);
+                return renderFn(gl);
+            }
+
+            console.error(`Function "${funcName}" not found. Available: ${Object.keys(functionRegistry).join(', ')}`);
+            return null;
+        }
+
+        const canvas = initResizeHandling();
+        let drawScene;
+
+        if (!canvas) {
+            console.error("Canvas element not found");
+            return;
+        }
+
+        const gl = canvas.getContext('webgl2');
+        if (gl) {
+            console.log("WebGL2 initialized");
+            drawScene = executeFunc(gl);
+        } else {
+            console.warn("WebGL2 not supported");
+        }
+    }
+)();
