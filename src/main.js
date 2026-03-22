@@ -3,8 +3,14 @@ import {setCanvasColor} from "./setCanvasColor";
 import {trianglePlane} from "./trianglePlane.js";
 
 const functionRegistry = {
-    setCanvasColor,
-    trianglePlane,
+    setCanvasColor: {
+        fn: setCanvasColor,
+        altText: "Set the background color of the canvas"
+    },
+    trianglePlane: {
+        fn: trianglePlane,
+        altText: "Render a colored triangle on the canvas"
+    },
 };
 
 (function init() {
@@ -57,7 +63,8 @@ const functionRegistry = {
             const params = new URLSearchParams(window.location.search);
             const funcName = params.get('func') || 'setCanvasColor';
 
-            const renderFn = functionRegistry[funcName];
+            const registryEntry = functionRegistry[funcName];
+            const renderFn = registryEntry ? registryEntry.fn : null;
             if (typeof renderFn === 'function') {
                 console.log(`Function ${funcName} executed`);
                 return renderFn(gl);
@@ -73,10 +80,14 @@ const functionRegistry = {
 
             navUl.innerHTML = '';
             Object.keys(functionRegistry).forEach(funcName => {
+                const entry = functionRegistry[funcName];
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = `?func=${funcName}`;
                 a.textContent = funcName;
+                if (entry.altText) {
+                    a.title = entry.altText;
+                }
                 li.appendChild(a);
                 navUl.appendChild(li);
             });
