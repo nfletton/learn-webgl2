@@ -31,7 +31,7 @@ void main() {
 }`
 
 
-export function squarePlane(gl) {
+export function trianglePlane(gl) {
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const program = createProgram(gl, vertexShader, fragmentShader);

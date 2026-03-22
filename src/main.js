@@ -1,10 +1,10 @@
 import './style.css'
 import {setCanvasColor} from "./setCanvasColor";
-import {squarePlane} from "./squarePlane";
+import {trianglePlane} from "./trianglePlane.js";
 
 const functionRegistry = {
     setCanvasColor,
-    squarePlane,
+    trianglePlane,
 };
 
 (function init() {
