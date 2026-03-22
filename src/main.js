@@ -67,6 +67,22 @@ const functionRegistry = {
             return null;
         }
 
+        function populateNav() {
+            const navUl = document.querySelector('#nav-sidebar ul');
+            if (!navUl) return;
+
+            navUl.innerHTML = '';
+            Object.keys(functionRegistry).forEach(funcName => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `?func=${funcName}`;
+                a.textContent = funcName;
+                li.appendChild(a);
+                navUl.appendChild(li);
+            });
+        }
+
+        populateNav();
         const canvas = initResizeHandling();
         let drawScene;
 
