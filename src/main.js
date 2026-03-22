@@ -1,17 +1,5 @@
 import './style.css'
-import {setCanvasColor} from "./setCanvasColor";
-import {trianglePlane} from "./trianglePlane.js";
-
-const functionRegistry = {
-    setCanvasColor: {
-        fn: setCanvasColor,
-        altText: "Set the background color of the canvas"
-    },
-    trianglePlane: {
-        fn: trianglePlane,
-        altText: "Render a colored triangle on the canvas"
-    },
-};
+import {functionRegistry} from "./functionRegistry.js";
 
 (function init() {
         function onResize(entries) {
