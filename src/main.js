@@ -93,6 +93,7 @@ import {functionRegistry} from "./functionRegistry.js";
         const gl = canvas.getContext('webgl2');
         if (gl) {
             console.log("WebGL2 initialized");
+            canvas.dispatchEvent(new Event('resize'))
             drawScene = executeFunc(gl);
         } else {
             console.warn("WebGL2 not supported");
