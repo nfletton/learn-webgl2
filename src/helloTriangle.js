@@ -8,56 +8,46 @@ import { createShader, createProgram } from './common';
 
 const vertexShaderSource =`#version 300 es
 
-// an attribute is an input (in) to a vertex shader.
-// It will receive data from a buffer
-in vec4 a_position;
+layout (location = 0) in vec3 aPos;
  
-// all shaders have a main function
 void main() {
- 
-  // gl_Position is a special variable a vertex shader
-  // is responsible for setting
-  gl_Position = a_position;
+  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }
 `
 
 const fragmentShaderSource =`#version 300 es
  
-// fragment shaders don't have a default precision so we need
-// to pick one. highp is a good default. It means "high precision"
 precision highp float;
  
-// we need to declare an output for the fragment shader
 out vec4 outColor;
  
 void main() {
-  // Just set the output to a constant reddish-purple
-  outColor = vec4(1, 0, 0.5, 1);
+  outColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
 }`
 
 
-export function trianglePlane(gl) {
+export function helloTriangle(gl) {
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const program = createProgram(gl, vertexShader, fragmentShader);
 
     // look up the location of the attribute for the program we just created
-    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
     // Attributes get their data from buffers, so we need to create a buffer
     const positionBuffer = gl.createBuffer();
     // Bind a resource to a bind point. Then, all other functions refer to the resource through the bind point.
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     // put data in the buffer. This data is already in the clip space
-    const positions = [
-        0, 0,
-        0, 0.5,
-        0.7, 0,
-        -.5, 0,
-        -.5, -0.5,
-        0.7, -0.5,
+    const vertices = [
+        0, 0, 0,
+        0, 0.5, 0,
+        0.7, 0, 0,
+        -.5, 0, 0,
+        -.5, -0.5, 0,
+        0.7, -0.5, 0,
     ];
     // Now we can put data in that buffer by referencing it through the bind point
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     // create a collection of attribute state called a Vertex Array Object.
     const vao = gl.createVertexArray();
     // make that the current vertex array so that all of our attribute settings will apply to that set of attribute state
@@ -65,7 +55,7 @@ export function trianglePlane(gl) {
     //Now we finally setup the attributes in the vertex array. First off we need to turn the attribute on.
     gl.enableVertexAttribArray(positionAttributeLocation);
 
-    const size = 2;          // 2 components per iteration
+    const size = 3;          // 2 components per iteration
     const type = gl.FLOAT;   // the data is 32bit floats
     const normalize = false; // don't normalize the data
     const stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position

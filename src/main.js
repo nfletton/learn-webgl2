@@ -90,7 +90,12 @@ import {functionRegistry} from "./functionRegistry.js";
             return;
         }
 
-        const gl = canvas.getContext('webgl2');
+        let options = {
+            // antialias: false,
+            stencil: true,
+            preserveDrawingBuffer: true,
+        };
+        const gl = canvas.getContext('webgl2', options);
         if (gl) {
             console.log("WebGL2 initialized");
             canvas.dispatchEvent(new Event('resize'))
