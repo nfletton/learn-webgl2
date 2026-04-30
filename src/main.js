@@ -47,18 +47,21 @@ import {functionRegistry} from "./functionRegistry.js";
             return canvas
         }
 
-        function executeFunc(gl) {
+        function getSketchData() {
             const params = new URLSearchParams(window.location.search);
             const funcName = params.get('func') || 'setCanvasColor';
 
             const registryEntry = functionRegistry[funcName];
-            const renderFn = registryEntry ? registryEntry.fn : null;
-            if (typeof renderFn === 'function') {
-                console.log(`Function ${funcName} executed`);
-                return renderFn(gl);
+            return registryEntry ? registryEntry : null;
+        }
+
+        function executeSketch(gl, sketchData) {
+            if (typeof sketchData.fn === 'function') {
+                console.log(`Function ${sketchData.funcName} executed`);
+                return sketchData.fn(gl);
             }
 
-            console.error(`Function "${funcName}" not found. Available: ${Object.keys(functionRegistry).join(', ')}`);
+            console.error(`Function "${sketchData.funcName}" not found. Available: ${Object.keys(functionRegistry).join(', ')}`);
             return null;
         }
 
@@ -90,16 +93,20 @@ import {functionRegistry} from "./functionRegistry.js";
             return;
         }
 
-        let options = {
-            // antialias: false,
+        const sketchData = getSketchData();
+
+        let defaultOptions = {
             stencil: true,
             preserveDrawingBuffer: true,
         };
-        const gl = canvas.getContext('webgl2', options);
+        const gl = canvas.getContext(
+            'webgl2',
+            {...defaultOptions, ...sketchData.contextOptions}
+        );
         if (gl) {
             console.log("WebGL2 initialized");
             canvas.dispatchEvent(new Event('resize'))
-            drawScene = executeFunc(gl);
+            drawScene = executeSketch(gl, sketchData);
         } else {
             console.warn("WebGL2 not supported");
         }

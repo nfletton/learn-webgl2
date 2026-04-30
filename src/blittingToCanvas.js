@@ -1,9 +1,10 @@
 import {createShader, createProgram} from './common';
 
 /*
-* Demonstrates how to copy a texture or renderbuffer (commented out) to the default
-* canvas framebuffer. The initial purpose was to demonstrate color space conversion
-* from linear to sRGB in the default framebuffer but this does not appear to work.
+* Demonstrates how to copy a texture or renderbuffer (see hard coded if condition)
+* to the default canvas framebuffer.
+* The initial purpose was to demonstrate color space conversion from linear to
+* sRGB in the default framebuffer but this does not appear to work.
 */
 
 
@@ -75,27 +76,28 @@ export function blittingToCanvas(gl) {
     function drawScene() {
         console.log(gl.canvas.width, gl.canvas.height);
 
-        const srgbFbo = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, srgbFbo);
+        const fb = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
-        // Use a texture with the hardware sRGB format
-        const srgbTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, srgbTexture);
-        gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
-        gl.framebufferTexture2D(
-            gl.FRAMEBUFFER,
-            gl.COLOR_ATTACHMENT0,
-            gl.TEXTURE_2D,
-            srgbTexture,
-            0
-        );
-
-        // Use renderbuffer with the hardware sRGB format
-        // const colorRb = gl.createRenderbuffer();
-        // gl.bindRenderbuffer(gl.RENDERBUFFER, colorRb);
-        // gl.renderbufferStorage(gl.RENDERBUFFER, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
-        // gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorRb);
-
+        let attachment
+        if (true) { // Use a texture with the hardware sRGB format
+            attachment = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, attachment);
+            gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
+            gl.framebufferTexture2D(
+                gl.FRAMEBUFFER,
+                gl.COLOR_ATTACHMENT0,
+                gl.TEXTURE_2D,
+                attachment,
+                0
+            );
+        } else {
+            // Use renderbuffer with the hardware sRGB format
+            attachment = gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, attachment);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, attachment);
+        }
 
         console.log(gl.canvas.width, gl.canvas.height);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -107,7 +109,7 @@ export function blittingToCanvas(gl) {
         gl.drawArrays(primitiveType, offset, count);
 
          // Blit the results to the default canvas framebuffer
-         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srgbFbo);
+         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fb);
          gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
 
         gl.blitFramebuffer(

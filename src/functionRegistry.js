@@ -18,6 +18,7 @@ export const functionRegistry = {
     },
     sRgbRendering: {
         fn: blittingToCanvas,
-        altText: "Blitting offscreen framebuffer to default canvas framebuffer"
+        altText: "Blitting offscreen framebuffer to default canvas framebuffer",
+        contextOptions: {antialias: false}
     },
 };
