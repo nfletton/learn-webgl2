@@ -5,6 +5,7 @@ An exercise in learning WebGL 2.
 - [Learn OpenGL](https://learnopengl.com/)
 - [Learn WebGL](https://learnwebgl.brown37.net/)
 - [docs.GL](https://docs.gl/)
+- [WebGL 2.0 Videos](https://www.youtube.com/playlist?list=PLPbmjY2NVO_X1U1JzLxLDdRn4NmtxyQQo)
 
 ## Setup and Development
 - **Install dependencies:**

@@ -52,16 +52,19 @@ import {functionRegistry} from "./functionRegistry.js";
             const funcName = params.get('func') || 'setCanvasColor';
 
             const registryEntry = functionRegistry[funcName];
-            return registryEntry ? registryEntry : null;
+            if (registryEntry) {
+                return registryEntry;
+            } else {
+                console.error(`Function ${funcName} not found. Available: ${Object.keys(functionRegistry).join(', ')}`);
+                return null;
+            }
         }
 
         function executeSketch(gl, sketchData) {
             if (typeof sketchData.fn === 'function') {
-                console.log(`Function ${sketchData.funcName} executed`);
+                console.log(`Function ${sketchData.fn.name} executed`);
                 return sketchData.fn(gl);
             }
-
-            console.error(`Function "${sketchData.funcName}" not found. Available: ${Object.keys(functionRegistry).join(', ')}`);
             return null;
         }
 
@@ -94,6 +97,7 @@ import {functionRegistry} from "./functionRegistry.js";
         }
 
         const sketchData = getSketchData();
+        if (!sketchData) return;
 
         let defaultOptions = {
             stencil: true,
@@ -105,6 +109,10 @@ import {functionRegistry} from "./functionRegistry.js";
         );
         if (gl) {
             console.log("WebGL2 initialized");
+            if (!gl.getExtension("EXT_color_buffer_float")) {
+                console.warn("EXT_color_buffer_float extension not supported");
+            }
+
             canvas.dispatchEvent(new Event('resize'))
             drawScene = executeSketch(gl, sketchData);
         } else {
