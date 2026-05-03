@@ -1,7 +1,10 @@
-An personal exercise in learning WebGl2.
+An exercise in learning WebGL 2.
 
 ## References
-- [WebGL2 Tutorial](https://webglfundamentals.org/webgl/lessons/webgl2-fundamentals.html)
+- [WebGL 2 Fundamentals](https://webgl2fundamentals.org/)
+- [Learn OpenGL](https://learnopengl.com/)
+- [Learn WebGL](https://learnwebgl.brown37.net/)
+- [docs.GL](https://docs.gl/)
 
 ## Setup and Development
 - **Install dependencies:**
