@@ -1,7 +1,7 @@
 import {setCanvasColor} from "./setCanvasColor";
 import {helloTriangle} from "./helloTriangle.js";
 import {randomRectangles} from "./randomRectangles.js";
-import {blittingToCanvas} from "./blittingToCanvas.js";
+import {antiAliasing} from "./antiAliasing.js";
 
 export const functionRegistry = {
     setCanvasColor: {
@@ -16,9 +16,9 @@ export const functionRegistry = {
         fn: randomRectangles,
         altText: "Render 50 random rectangles"
     },
-    sRgbRendering: {
-        fn: blittingToCanvas,
-        altText: "Blitting offscreen framebuffer to default canvas framebuffer",
+    antiAliasing: {
+        fn: antiAliasing,
+        altText: "Multisampling anti-aliasing",
         contextOptions: {antialias: false}
     },
 };

@@ -1,14 +1,14 @@
 import {createShader, createProgram} from './common';
 
 /*
-* Demonstrates how to copy a texture or renderbuffer (see hard coded if condition)
-* to the default canvas framebuffer.
-* The initial purpose was to demonstrate color space conversion from linear to
-* sRGB in the default framebuffer but this does not appear to work.
+* Demonstrates how to achieve anti-aliasing by blitting from a multisampled framebuffer
+* to the default framebuffer.
+*
+* Ref: https://www.youtube.com/watch?v=fAERZC4PjnI
 */
 
 
-const vertexShaderSource =`#version 300 es
+const vertexShaderSource = `#version 300 es
 
 layout (location = 0) in vec3 aPos;
 uniform vec3 u_color;
@@ -20,7 +20,7 @@ void main() {
 }
 `
 
-const fragmentShaderSource =`#version 300 es
+const fragmentShaderSource = `#version 300 es
  
 precision highp float;
  
@@ -37,7 +37,10 @@ function sRGBToLinear(color) {
 
 const mySrgbColor = [1.00, 0.753, 0.796];
 
-export function blittingToCanvas(gl) {
+export function antiAliasing(gl) {
+    const SAMPLES_PER_PIXEL = Math.min(4, gl.getParameter(gl.MAX_SAMPLES));
+    console.log(`Samples per pixel: ${SAMPLES_PER_PIXEL}, Max samples: ${gl.getParameter(gl.MAX_SAMPLES)}`);
+
     gl.unpackColorSpace = "srgb";
     gl.drawingBufferColorSpace = 'srgb';
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -76,28 +79,21 @@ export function blittingToCanvas(gl) {
     function drawScene() {
         console.log(gl.canvas.width, gl.canvas.height);
 
-        const fb = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        const fbMsaa = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbMsaa);
 
-        let attachment
-        if (true) { // Use a texture with the hardware sRGB format
-            attachment = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, attachment);
-            gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                gl.COLOR_ATTACHMENT0,
-                gl.TEXTURE_2D,
-                attachment,
-                0
-            );
-        } else {
-            // Use renderbuffer with the hardware sRGB format
-            attachment = gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, attachment);
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, attachment);
-        }
+        const attachment1 = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, attachment1);
+        /*
+        * If the internal format is SRGB_ALPHA8, then it appears that it is necessary to
+        * blit to a framebuffer with a texture color attachment that is also SRGB_ALPHA8.
+        * Followed by a blit of that to the default framebuffer.
+        * */
+        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, 4, gl.RGBA8, gl.canvas.width, gl.canvas.height);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, attachment1);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbMsaa);
 
         console.log(gl.canvas.width, gl.canvas.height);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -107,10 +103,10 @@ export function blittingToCanvas(gl) {
         const primitiveType = gl.TRIANGLES;
         const count = 6
         gl.drawArrays(primitiveType, offset, count);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-         // Blit the results to the default canvas framebuffer
-         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fb);
-         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbMsaa);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
 
         gl.blitFramebuffer(
             0, 0, gl.canvas.width, gl.canvas.height,
@@ -118,6 +114,9 @@ export function blittingToCanvas(gl) {
             gl.COLOR_BUFFER_BIT,
             gl.NEAREST
         );
+
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
     }
 
     return drawScene;
