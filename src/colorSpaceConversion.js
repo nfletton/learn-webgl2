@@ -1,12 +1,9 @@
 import {createShader, createProgram} from './common';
 
 /*
-* Demonstrates how to achieve anti-aliasing by blitting from a multisampled framebuffer
-* to the default framebuffer.
-*
-* Ref: https://www.youtube.com/watch?v=fAERZC4PjnI
+* Attempts to achieve linear to sRGB color conversion by blitting from a backing framebuffer
+* to the default framebuffer. Does not work!
 */
-
 
 const vertexShaderSource = `#version 300 es
 
@@ -37,12 +34,13 @@ function sRGBToLinear(color) {
 
 const mySrgbColor = [1.00, 0.753, 0.796];
 
-export function antiAliasing(gl) {
+export function colorSpaceConversion(gl) {
     const SAMPLES_PER_PIXEL = Math.min(4, gl.getParameter(gl.MAX_SAMPLES));
     console.log(`Samples per pixel: ${SAMPLES_PER_PIXEL}, Max samples: ${gl.getParameter(gl.MAX_SAMPLES)}`);
 
     gl.unpackColorSpace = "srgb";
     gl.drawingBufferColorSpace = 'srgb';
+
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const program = createProgram(gl, vertexShader, fragmentShader);
@@ -79,30 +77,40 @@ export function antiAliasing(gl) {
     function drawScene() {
         console.log(gl.canvas.width, gl.canvas.height);
 
-        const fbMsaa = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbMsaa);
+        const fb = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
-        const attachment1 = gl.createRenderbuffer();
-        gl.bindRenderbuffer(gl.RENDERBUFFER, attachment1);
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, gl.canvas.width, gl.canvas.height);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,
+            gl.COLOR_ATTACHMENT0,
+            gl.TEXTURE_2D,
+            texture,
+            0
+        );
 
-        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, 4, gl.RGBA8, gl.canvas.width, gl.canvas.height);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, attachment1);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        if (status !== gl.FRAMEBUFFER_COMPLETE) {
+            throw new Error(`Framebuffer incomplete: ${status}`);
+        }
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbMsaa);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
         console.log(gl.canvas.width, gl.canvas.height);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clearColor(1.00, 0.753, 0.796, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
         const primitiveType = gl.TRIANGLES;
         const count = 6
         gl.drawArrays(primitiveType, offset, count);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbMsaa);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fb);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+        gl.readBuffer(gl.COLOR_ATTACHMENT0);
 
         gl.blitFramebuffer(
             0, 0, gl.canvas.width, gl.canvas.height,
